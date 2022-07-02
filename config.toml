@@ -1,0 +1,7 @@
+baseURL = 'https://secondfolder.com/'
+languageCode = 'en-au'
+title = 'Second Folder'
+theme = 'hyde'
+
+[params]
+    description = "Because I can't be horny on main."

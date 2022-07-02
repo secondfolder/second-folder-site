@@ -1,0 +1,28 @@
+{{ $image := $.Page.Resources.GetMatch (.Get "src") }}
+{{ $rawImageWidth := $image.Width }}
+{{ $defaultMaxWidth := 720 }}
+{{ $maxImageWidth := cond (le (.Get "max-width") $defaultMaxWidth) (int (.Get "max-width")) $defaultMaxWidth }}
+{{ if lt $rawImageWidth $maxImageWidth }}
+    {{ $maxImageWidth = $rawImageWidth }}
+{{ end }}
+{{ $imageSizes := slice 400 600 $maxImageWidth }}
+{{ $filteredImageSizes := slice }}
+{{ $sourceSet := slice }}
+{{ range $imageSizes }}
+    {{ if le . $maxImageWidth }}
+        {{ $filteredImageSizes = $filteredImageSizes | append . }}
+        {{ $resizedImage := $image.Resize (printf "%d%s" . "x") }}
+        {{ $sourceSet = $sourceSet | append (printf "%s %d%s" $resizedImage.RelPermalink . "w") }}
+    {{ end }}
+{{ end }}
+{{ $largestSize := index (last 1 $filteredImageSizes) 0}}
+
+<picture>
+    <source srcset="{{ delimit $sourceSet ", " }}">
+    <img 
+        alt="{{ .Get "alt" }}"
+        title="{{ .Get "title" }}"
+        src="{{ ($image.Resize (printf "%d%s" $largestSize "x")).RelPermalink }}"
+        width="{{ $largestSize }}"
+    >
+</picture>
