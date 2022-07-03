@@ -1,23 +1,35 @@
 {{ $image := $.Page.Resources.GetMatch (.Get "src") }}
+{{ $imageDark := $.Page.Resources.GetMatch (.Get "src-dark") }}
 {{ $rawImageWidth := $image.Width }}
 {{ $defaultMaxWidth := 720 }}
-{{ $maxImageWidth := cond (le (.Get "max-width") $defaultMaxWidth) (int (.Get "max-width")) $defaultMaxWidth }}
+{{ $maxImageWidth := int (cond (eq (.Get "max-width") "") $defaultMaxWidth (.Get "max-width")) }}
 {{ if lt $rawImageWidth $maxImageWidth }}
     {{ $maxImageWidth = $rawImageWidth }}
 {{ end }}
-{{ $imageSizes := slice 400 600 $maxImageWidth }}
+{{ $imageSizes := slice 400 600 800 $maxImageWidth }}
 {{ $filteredImageSizes := slice }}
 {{ $sourceSet := slice }}
+{{ $sourceSetDark := slice }}
 {{ range $imageSizes }}
     {{ if le . $maxImageWidth }}
         {{ $filteredImageSizes = $filteredImageSizes | append . }}
         {{ $resizedImage := $image.Resize (printf "%d%s" . "x") }}
         {{ $sourceSet = $sourceSet | append (printf "%s %d%s" $resizedImage.RelPermalink . "w") }}
+        {{ if $imageDark }}
+            {{ $resizedImageDark := $imageDark.Resize (printf "%d%s" . "x") }}
+            {{ $sourceSetDark = $sourceSetDark | append (printf "%s %d%s" $resizedImageDark.RelPermalink . "w") }}
+        {{ end }}
     {{ end }}
 {{ end }}
 {{ $largestSize := index (last 1 $filteredImageSizes) 0}}
 
 <picture>
+    {{ if $imageDark }}
+        <source
+            srcset="{{ delimit $sourceSetDark ", " }}"
+            media="(prefers-color-scheme: dark)"
+        >
+    {{ end }}
     <source srcset="{{ delimit $sourceSet ", " }}">
     <img 
         alt="{{ .Get "alt" }}"
